@@ -1,0 +1,869 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+public class project1 {
+    static String tiles = "";
+    static char[][] animals = new char[7][9];
+    static boolean turn = true;
+    //true is left side, false is right side.
+
+    public static void loadTileMap() throws FileNotFoundException {
+        Scanner scannerTile = new Scanner(new File("tile.txt"));
+        for (int t = 0; t < 7; t++) {
+            tiles += scannerTile.nextLine();
+        }
+    }
+    //输入地形图文件，以供读取和改变；
+
+    public static void loadAnimal() throws FileNotFoundException {
+        Scanner scanner = new Scanner(new File("animal.txt"));
+        for (int i = 0; i < 7; i++) {
+            String line = scanner.nextLine();
+            animals[i] = new char[9];
+            for (int j = 0; j < 9; j++) {
+                char theChar = line.charAt(j);
+                animals[i][j] = theChar;
+            }
+        }
+    }
+    //输入动物地图文件，以供读取和改变；
+
+    public static void main(String[] args) throws FileNotFoundException {
+        loadTileMap();
+        loadAnimal();
+        printBoard();
+        Scanner input = new Scanner(System.in);
+        for (int num = 0; ; num++) {
+            if (turn) {
+                System.out.println("请左方玩家下指令~");
+            } else {
+                System.out.println("请右方玩家下指令~");
+            }
+            String order = input.next();
+            if (order.equals("help")) {
+                System.out.println("1.移动指令" + "\n" +
+                        "移动指令由两个部分组成。" + "\n" +
+                        "第一部分是数字1-8，根据战斗力分别对应鼠（1），猫（2），狼（3），狗（4），豹（5），虎（6），狮（7），象（8）" + "\n" +
+                        "第二部分是字母wasd中的一个，w对应上方向，a对应左方向，s对应下方向，d对应右方向" + "\n" +
+                        "比如指令“1d”表示鼠向右走，“4w”表示狗向左走" + "\n" +
+                        "" + "\n" +
+                        "2.游戏指令" + "\n" +
+                        "输入 restart 重新开始游戏" + "\n" +
+                        "输入 help 查看帮助" + "\n" +
+                        "输入 undo 悔棋" + "\n" +
+                        "输入 redo 取消悔棋" + "\n" +
+                        "输入 exit 退出游戏");
+            } else if (order.equals("exit")) {
+                System.out.println("您已退出游戏！");
+                System.exit(0);
+            } else if (order.length() != 2 || order.charAt(0) > '9' || order.charAt(0) < '0' || (order.charAt(1) != 'a' && order.charAt(1) != 's' && order.charAt(1) != 'w' && order.charAt(1) != 'd')) {
+                System.out.println("您输入的指令不符合规则，请输入一个0-8的数字和一个wasd指令");
+            } else {
+                locationFound(order);
+                printBoard();
+                victoryOrDefeat();
+            }
+        }
+    }
+    // invoke some method;
+
+    public static boolean locationFound(String order) {
+        if (turn) {
+            for (int i = 0; i < 7; i++) {
+                for (int j = 0; j < 9; j++) {
+                    int number = (int) order.charAt(0);
+                    char c = (char) (number - '1' + 'a');
+                    if (animals[i][j] == c) {
+                        animalsBlank(order, i, j);
+                        animalsCapture(order, i, j);
+                        animalsBesideDen(order, i, j);
+                        animalsBesideRiver(order, i, j);
+                        return true;
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < 7; i++) {
+                for (int j = 0; j < 9; j++) {
+                    if (animals[i][j] == order.charAt(0)) {
+                        animalsBlank(order, i, j);
+                        animalsCapture(order, i, j);
+                        animalsBesideDen(order, i, j);
+                        animalsBesideRiver(order, i, j);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    //两层循环找到指令中的动物所在的位置并且使其可以移动到下一步；
+
+    public static void printBoard() {
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (animals[i][j] == '0') {
+                    char theChar = tiles.charAt(i * 9 + j);
+                    switch (theChar) {
+                        case '0':
+                            System.out.print(" 　 ");
+                            break;
+                        case '1':
+                            System.out.print(" 水 ");
+                            break;
+                        case '2':
+                            System.out.print(" 陷 ");
+                            break;
+                        case '3':
+                            System.out.print(" 家 ");
+                            break;
+                        case '4':
+                            System.out.print(" 陷 ");
+                            break;
+                        case '5':
+                            System.out.print(" 家 ");
+                            break;
+                    }
+                } else {
+                    switch (animals[i][j]) {
+                        case 'a':
+                            System.out.print("1鼠 ");
+                            break;
+                        case 'b':
+                            System.out.print("2猫 ");
+                            break;
+                        case 'c':
+                            System.out.print("3狼 ");
+                            break;
+                        case 'd':
+                            System.out.print("4狗 ");
+                            break;
+                        case 'e':
+                            System.out.print("5豹 ");
+                            break;
+                        case 'f':
+                            System.out.print("6虎 ");
+                            break;
+                        case 'g':
+                            System.out.print("7狮 ");
+                            break;
+                        case 'h':
+                            System.out.print("8象 ");
+                            break;
+                        case '0':
+                            System.out.print("  　");
+                            break;
+                        case '1':
+                            System.out.print(" 鼠1");
+                            break;
+                        case '2':
+                            System.out.print(" 猫2");
+                            break;
+                        case '3':
+                            System.out.print(" 狼3");
+                            break;
+                        case '4':
+                            System.out.print(" 狗4");
+                            break;
+                        case '5':
+                            System.out.print(" 豹5");
+                            break;
+                        case '6':
+                            System.out.print(" 虎6");
+                            break;
+                        case '7':
+                            System.out.print(" 狮7");
+                            break;
+                        case '8':
+                            System.out.print(" 象8");
+                            break;
+                        default:
+                            break;
+                    }// animals
+                }//地形图
+            }
+            System.out.println();
+        }
+    }
+    //根据输入的改变后的棋盘状态，将数字或字母转化为文字地图；
+
+    public static void animalsBlank(String order, int i, int j) {
+        if (order.charAt(1) == 'a') {
+            //向左方运动；
+            if (i < 0 || i > 6 || j > 8 || j < 1) {
+                //越界；
+                System.out.println("这样不行呀，会越界的呀~");
+            } else {
+                if (animals[i][j - 1] == '0' && (tiles.charAt(i * 9 + j - 1) == '2' || tiles.charAt(i * 9 + j - 1) == '4' || tiles.charAt(i * 9 + j - 1) == '0')) {
+                    //下一步没有动物，是陷阱或者空地；
+                    animals[i][j - 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                }
+            }
+        } else if (order.charAt(1) == 's') {
+            if (i < 0 || i > 5 || j > 8 || j < 0) {
+                System.out.println("这样不行呀，会越界的呀~");
+            } else {
+                if (animals[i + 1][j] == '0' && (tiles.charAt((i + 1) * 9 + j) == '2' || tiles.charAt((i + 1) * 9 + j + 1) == '4' || tiles.charAt((i + 1) * 9 + j) == '0')) {
+                    animals[i + 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                }
+            }
+        } else if (order.charAt(1) == 'd') {
+            if (i < 0 || i > 6 || j > 7 || j < 0) {
+                System.out.println("这样不行呀，会越界的呀~");
+            } else {
+                if (animals[i][j + 1] == '0' && (tiles.charAt(i * 9 + j + 1) == '2' || tiles.charAt(i * 9 + j + 1) == '4' || tiles.charAt(i * 9 + j + 1) == '0')) {
+                    animals[i][j + 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                }
+            }
+        } else if (order.charAt(1) == 'w') {
+            if (i < 1 || i > 6 || j > 8 || j < 0) {
+                System.out.println("这样不行呀，会越界的呀~");
+            } else {
+                if (animals[i - 1][j] == '0' && (tiles.charAt((i - 1) * 9 + j) == '2' || tiles.charAt((i - 1) * 9 + j + 1) == '4' || tiles.charAt((i - 1) * 9 + j) == '0')) {
+                    animals[i - 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                }
+            }
+        }
+    }
+    //使动物可以移动到空白处；动物旁边是空白；
+
+    public static void animalsBesideRiver(String order, int i, int j) {
+        if (order.charAt(1) == 'a' && tiles.charAt(i * 9 + j - 1) == '1') {
+            //动物要向左且左方是河时；
+            if (turn) {
+                //左方动物的行动；
+                if (animals[i][j] == 'a') {
+                    //左方老鼠；
+                    animals[i][j - 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //老鼠可以跳河；
+                } else if ((animals[i][j] == 'g' || animals[i][j] == 'f') && tiles.charAt(i * 9 + j - 1) == '1' && tiles.charAt(i * 9 + j - 2) == '1' && tiles.charAt(i * 9 + j - 3) == '1') {
+                    //狮子或老虎前面是河；
+                    if (tiles.charAt(i * 9 + j - 4) == '0') {
+                        //如果对岸没有动物，跳过去；
+                        animals[i][j - 4] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                    } else {
+                        //对岸与动物，过不去；
+                        System.out.println("对岸有动物哦，过不去哒~");
+                    }
+                } else if (animals[i][j] == 'g' || animals[i][j] == 'f' && (animals[i][j - 1] != '0' || animals[i][j - 2] != '0' || animals[i][j - 3] != '0')) {
+                    //路径中有老鼠，不可跳河；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不可跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            } else if (!turn) {
+                //右方动物的行动；
+                if (animals[i][j] == '1') {
+                    //右方的老鼠行动；
+                    animals[i][j - 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //可以跳河；
+                }
+                if (animals[i][j] == '6' || animals[i][j] == '7' && tiles.charAt(i * 9 + j - 1) == '1' && tiles.charAt(i * 9 + j - 2) == '1' && tiles.charAt(i * 9 + j - 3) == '1') {
+                    //狮子和老虎的行动，面临河；
+                    if (animals[i][j - 4] == '0') {
+                        //对岸没有动物；
+                        animals[i][j - 4] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        //可以跳到对岸去；
+                    } else {
+                        //对岸有动物；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if (animals[i][j] == '6' || animals[i][j] == '7' && (animals[i][j - 1] != '0' || animals[i][j - 2] != '0' || animals[i][j - 3] != '0')) {
+                    //狮子和老虎的行为，路径中有老鼠，不可跳过；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不可跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            }
+        }
+        if (order.charAt(1) == 'd' && tiles.charAt(i * 9 + j + 1) == '1') {
+            //向右走右方是老鼠；
+            if (turn) {
+                //左方动物的行为；
+                if (animals[i][j] == 'a') {
+                    //左方老鼠的行为；
+                    animals[i][j + 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //老鼠可以跳河；
+                }
+                if (animals[i][j] == 'g' || animals[i][j] == 'f' && tiles.charAt(i * 9 + j + 1) == '1' && tiles.charAt(i * 9 + j + 2) == '1' && tiles.charAt(i * 9 + j + 3) == '1') {
+                    if (animals[i][j + 4] == '0') {
+                        //狮子和老虎对岸没有动物，跳过；
+                        animals[i][j + 4] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                    } else {
+                        //对岸有动物，不可跳河；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if (animals[i][j] == 'g' || animals[i][j] == 'f' && (animals[i][j + 1] != '0' || animals[i][j + 2] != '0' || animals[i][j + 3] != '0')) {
+                    //路径中有老鼠；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不可跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            } else if (!turn) {
+                //右方动物；
+                if (animals[i][j] == '1') {
+                    //右方鼠的行动；
+                    animals[i][j + 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //右方鼠可以跳进河；
+                }
+                if (animals[i][j] == '6' || animals[i][j] == '7' && tiles.charAt(i * 9 + j + 1) == '1' && tiles.charAt(i * 9 + j + 2) == '1' && tiles.charAt(i * 9 + j + 3) == '1') {
+                    //前方是河；
+                    if (animals[i][j + 4] == '0') {
+                        //对岸没有动物；
+                        animals[i][j + 4] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                    } else {
+                        //对岸有动物；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if (animals[i][j] == '6' || animals[i][j] == '7' && (animals[i][j + 1] != '0' || animals[i][j + 2] != '0' || animals[i][j + 3] != '0')) {
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不能跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            }
+        }
+        if (order.charAt(1) == 'w' && tiles.charAt((i - 1) * 9 + j) == '1') {
+            //动物要向上且上方是河时；
+            if (turn) {
+                //左方动物的行为；
+                if (animals[i][j] == 'a') {
+                    //左方老鼠的行为；
+                    animals[i - 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //左方老鼠可以跳河；
+                }
+                if ((animals[i][j] == 'g' || animals[i][j] == 'f') && tiles.charAt((i - 1) * 9 + j) == '1' && tiles.charAt((i - 2) * 9 + j) == '1') {
+                    //动物前面是河；
+                    if (animals[i - 3][j] == '0') {
+                        //动物对岸没有动物；
+                        animals[i - 3][j] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        //动物可以跳到对岸；
+                    } else {
+                        //动物对岸有动物；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if (animals[i][j] == 'g' || animals[i][j] == 'f' && (animals[i - 1][j] != '0' || animals[i - 2][j] != '0')) {
+                    //路径中有动物；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不可跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            } else if (!turn) {
+                //右方动物行动；
+                if (animals[i][j] == '1') {
+                    //右方老鼠行动；
+                    animals[i - 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //右方老鼠可以跳河；
+                }
+                if ((animals[i][j] == '6' || animals[i][j] == '7') && tiles.charAt((i - 1) * 9 + j) == '1' && tiles.charAt((i - 2) * 9 + j) == '1') {
+                    //狮子和老虎前方为河；
+                    if (animals[i - 3][j] == '0') {
+                        //对岸没有动物；
+                        animals[i - 3][j] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        //可以跳到对岸；
+                    } else {
+                        //对岸有动物，不可跳河；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if ((animals[i][j] == '6' || animals[i][j] == '7') && (animals[i - 1][j] != '0' || animals[i - 2][j] != '0')) {
+                    //路径中有老鼠；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不可跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            }
+        }
+        if (order.charAt(1) == 's' && tiles.charAt((i + 1) * 9 + j) == '1') {
+            //动物要向下且下方是河;
+            if (turn) {
+                if (animals[i][j] == 'a') {
+                    animals[i + 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                }
+                if ((animals[i][j] == 'g' || animals[i][j] == 'f') && tiles.charAt((i + 1) * 9 + j) == '1' && tiles.charAt((i + 2) * 9 + j) == '1') {
+                    //动物前方是河；
+                    if (animals[i][j + 3] == '0') {
+                        //动物对岸没有动物；
+                        animals[i][j + 3] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                    } else {
+                        //动物对岸有动物，不可跳河；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if ((animals[i][j] == 'g' || animals[i][j] == 'f') && (animals[i + 1][j] != '0' || animals[i + 2][j] != '0')) {
+                    //路径中有老鼠；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不能跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            } else if (!turn) {
+                //右方动物的行动；
+                if (animals[i][j] == '1') {
+                    //右方老鼠的行动；
+                    animals[i][j + 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //老鼠可以跳河；
+                }
+                if ((animals[i][j] == '6' || animals[i][j] == '7') && tiles.charAt((i + 1) * 9 + j) == '1' && tiles.charAt((i + 2) * 9 + j) == '1') {
+                    //动物前方是河；
+                    if (animals[i][j + 3] == '0') {
+                        //动物对岸没有动物；
+                        animals[i][j + 3] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                    } else {
+                        //动物对岸有动物，不可跳河；
+                        System.out.println("对岸有动物不可跳河~");
+                    }
+                } else if ((animals[i][j] == 'g' || animals[i][j] == 'f') && (animals[i + 1][j] != '0' || animals[i + 2][j] != '0')) {
+                    //路径中有老鼠，不可跳河；
+                    System.out.println("路径中有老鼠不可以跳过去哦~换个走法吧！");
+                } else {
+                    //其他动物不可跳河；
+                    System.out.println("您不能跳河哦！");
+                }
+            }
+        }
+    }
+    //老鼠可以进出河，老虎和狮子在路径中没有老鼠时可以跳过河，其他动物不可；动物旁边是河；
+
+    public static void animalsBesideDen(String order, int i, int j) {
+        if (turn) {
+            //对左方动物进行操作；
+            if (order.charAt(1) == 'a') {
+                if (i >= 0 && i <= 6 && j >= 1 && j <= 8) {
+                    //动物要向左运动；
+                    if (tiles.charAt(i * 9 + j - 1) == '3') {
+                        //动物不可进入自己的兽穴；
+                        System.out.print("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    } else if (tiles.charAt(i * 9 + j - 1) == '5') {
+                        //动物进入对方的兽穴，对方胜；
+                        animals[i][j - 1] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入右方兽穴，左方输，右方胜，游戏结束，请右方选择restart或者exit~~");
+                    }
+                }
+            }else if (order.charAt(1) == 'd') {
+                if (i >= 0 && i <= 6 && j >= 0 && j <= 7) {
+                    if (tiles.charAt(i * 9 + j + 1) == '3') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    } else if (tiles.charAt(i * 9 + j + 1) == '5') {
+                        animals[i][j + 1] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入右方兽穴，左方输，右方胜，游戏结束，，请右方选择restart或者exit~~");
+                    }
+                }
+            }
+            if (order.charAt(1) == 'w') {
+                if (i >= 1 && i <= 6 && j >= 0 && j <= 8) {
+                    if (tiles.charAt((i - 1) * 9 + j) == '3') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    } else if (tiles.charAt((i - 1) * 9 + j) == '5') {
+                        animals[i - 1][j] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入右方兽穴，左方输，右方胜，游戏结束，请右方选择restart或者exit~~");
+                    }
+                }
+            }
+            if (order.charAt(1) == 's') {
+                if (i >= 0 && i <= 5 && j >= 0 && j <= 8) {
+                    if (tiles.charAt((i + 1) * 9 + j) == '3') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    } else if (tiles.charAt((i + 1) * 9 + j) == '5') {
+                        animals[i + 1][j] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入右方兽穴，左方输，右方胜，游戏结束，请右方选择restart或者exit~~");
+                    }
+                }
+            }
+        } else if (!turn) {
+            if (order.charAt(1) == 'a') {
+                if (i >= 0 && i <= 6 && j >= 1 && j <= 8) {
+                    if (tiles.charAt(i * 9 + j - 1) == '3') {
+                        animals[i][j - 1] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入左方兽穴，右方输，左方胜，游戏结束，请左方选择restart或者exit~~");
+                    } else if (tiles.charAt(i * 9 + j - 1) == '5') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    }
+                }
+            }else if (order.charAt(1) == 'd') {
+                if (i >= 0 && i <= 6 && j >= 0 && j <= 7) {
+                    if (tiles.charAt(i * 9 + j + 1) == '3') {
+                        animals[i][j + 1] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入左方兽穴，右方输，左方胜，游戏结束，请左方选择restart或者exit~~");
+                    } else if (tiles.charAt(i * 9 + j + 1) == '5') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    }
+                }
+            }else if (order.charAt(1) == 'w') {
+                if (i >= 1 && i <= 6 && j >= 0 && j <= 8) {
+                    if (tiles.charAt((i - 1) * 9 + j) == '3') {
+                        animals[i - 1][j] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入左方兽穴，右方输，左方胜，游戏结束，请左方选择restart或者exit~~");
+                    } else if (tiles.charAt((i - 1) * 9 + j) == '5') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    }
+                }
+            } else if (order.charAt(1) == 's') {
+                if (i >= 0 && i <= 5 && j >= 0 && j <= 8) {
+                    if (tiles.charAt((i + 1) * 9 + j) == '3') {
+                        animals[i + 1][j] = animals[i][j];
+                        animals[i][j] = '0';
+                        turn = !turn;
+                        System.out.println("左方动物已进入左方兽穴，右方输，左方胜，游戏结束，请左方选择restart或者exit~~");
+                    } else if (tiles.charAt((i + 1) * 9 + j) == '5') {
+                        System.out.println("您不能进入自己的兽穴哟~换个走法继续呀！");
+                    }
+                }
+            }
+        }
+    }
+    //己方动物不可进入己方兽穴，敌方动物进入己方兽穴胜利（其中一个决断胜负的方式），游戏结束；
+
+    public static void animalsCapture(String order, int i, int j) {
+        int currentPosition = animals[i][j] - '0';
+        if (order.charAt(1) == 'a'/*going left*/) {
+            if (i >= 0 && i <= 6 && j >= 1 && j <= 8) {
+                int nextStep = animals[i][j - 1] - '0';
+                if (animals[i][j] == '1' && animals[i][j - 1] == 'h') {
+                    //当前位置是右方的鼠，下一步是左方的象；
+                    animals[i][j - 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //鼠吃象；
+                } else if (animals[i][j] == 'a' && animals[i][j - 1] == '8') {
+                    //当前位置是左方的鼠，下一步是右方的象；
+                    animals[i][j - 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //鼠吃象;
+                } else if (animals[i][j] == 'h' && animals[i][j - 1] == '1') {
+                    //当前位置是左方的象，下一步是右方的鼠；
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");
+                    //象不能吃鼠；
+                } else if (animals[i][j] == '8' && animals[i][j - 1] == 'a') {
+                    //当前位置是右方的象，下一步是左方的鼠；
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");
+                    //象不能吃鼠;
+                } else if ((animals[i][j] != '1' || animals[i][j - 1] != 'h') && (animals[i][j] != 'a' || animals[i][j - 1] != '8')) {
+                    //除去大象和老鼠的情况；
+                    if (currentPosition >= 1 && currentPosition <= 8) {
+                        //目前是右方动物；
+                        if (nextStep >= 49 && nextStep <= 56) {
+                            //下一步里是左方动物；
+                            if (tiles.charAt(9 * i + j - 1) != '4') {
+                                //左方动物不在右方陷阱里，按规则吃；
+                                if (currentPosition < nextStep - 48) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i][j - 1] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                    //大吃小；
+                                }
+                            } else if (tiles.charAt(9 * i + j - 1) == '4') {
+                                //左方动物在右方陷阱里，失去战斗力，被右方吃掉；
+                                animals[i][j - 1] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                                //陷阱里动物被吃掉；
+                            }
+                        } else if (nextStep >= 1 && nextStep <= 8) {
+                            //下一步里是右方动物；
+                            System.out.println("不可以攻击自己人哦~");
+                            //提示不能过去攻击自己人；
+                        }
+                    } else if (currentPosition >= 49 && currentPosition <= 56) {
+                        //目前是左方动物；
+                        if (nextStep >= 1 && nextStep <= 8) {
+                            //下一步是右方动物；
+                            if (tiles.charAt(9 * i + j - 1) != '2') {
+                                //右方动物不在左方陷阱里，按规则吃
+                                if (currentPosition - 48 < nextStep) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i][j - 1] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                    //大吃小；
+                                }
+                            } else if (tiles.charAt(9 * i + j - 1) == '2') {
+                                //右方动物在左方陷阱里失去战斗力，右方被左方吃掉
+                                animals[i][j - 1] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                                //陷阱里动物被吃掉；
+                            }
+                        } else if (nextStep >= 49 && nextStep <= 56) {
+                            //下一步是左方动物；
+                            System.out.println("不可以攻击自己人哦~");
+                            //提示不可攻击自己人；
+                        }
+                    }
+                }
+            }
+        } else if (order.charAt(1) == 'd'/*going right*/) {
+            if (i >= 0 && i <= 6 && j >= 0 && j <= 7) {
+                //下一步是向右；
+                int nextStep = animals[i][j + 1] - '0';
+                if (animals[i][j] == '1' && animals[i][j + 1] == 'h') {
+                    //当前位置是右方的鼠，下一步是左方的象；
+                    animals[i][j + 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //鼠吃象；
+                } else if (animals[i][j] == 'a' && animals[i][j + 1] == '8') {
+                    //当前位置是左方的象，下一步是右方的鼠；
+                    animals[i][j + 1] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                    //鼠吃象;
+                } else if (animals[i][j] == 'h' && animals[i][j + 1] == '1') {
+                    //当前位置是左方的象，下一步是右方的鼠；
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");
+                } else if (animals[i][j] == '8' && animals[i][j + 1] == 'a') {
+                    //当前位置是右方的象，下一步是左方的鼠；
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");
+                    //象不能吃鼠;
+                } else if ((animals[i][j] != '1' || animals[i][j + 1] != 'h') && (animals[i][j] != 'a' || animals[i][j + 1] != '8')) {
+                    //排除鼠象；
+                    if (currentPosition >= 1 && currentPosition <= 8) {
+                        //当前位置是右方动物
+                        if (nextStep >= 49 && nextStep <= 56) {
+                            //下一步是左方动物；
+                            if (tiles.charAt(9 * i + j + 1) != '4') {
+                                //左方动物不在右方动物的陷阱里；
+                                if (currentPosition < nextStep - 48) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i][j + 1] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                }//正常吃法；
+                            } else {
+                                //左方在右方陷阱里失去战斗力；被右方吃掉；
+                                animals[i][j + 1] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                            }
+                        } else if (nextStep >= 1 && nextStep <= 8) {
+                            //下一步是右方动物，不可攻击；
+                            System.out.println("不可以攻击自己人哦~");
+                        }
+                    } else if (currentPosition >= 49 && currentPosition <= 56) {
+                        //当前为左方动物；
+                        if (nextStep >= 1 && nextStep <= 8) {
+                            //下一步是右方动物；
+                            if (tiles.charAt(9 * i + j + 1) != '2') {
+                                //右方动物不在左方的陷阱里；
+                                if (currentPosition - 48 < nextStep) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i][j + 1] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                }//正常吃法，大吃小；
+                            } else {
+                                //右方动物在左方的陷阱里支取战斗力；
+                                animals[i][j + 1] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                            }
+                        } else if (nextStep >= 49 && nextStep <= 56) {
+                            //下一步是左方同胞；
+                            System.out.println("不可以攻击自己人哦~");
+                        }
+                    }
+                }
+            }
+        } else if (order.charAt(1) == 'w'/*going up*/) {
+            if (i >= 1 && i <= 6 && j >= 0 && j <= 8) {
+                int nextStep = animals[i - 1][j] - '0';
+                if (animals[i][j] == '1' && animals[i - 1][j] == 'h') {
+                    animals[i - 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                } else if (animals[i][j] == 'a' && animals[i - 1][j] == '8') {
+                    animals[i - 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;//monkey can eat elephant;
+                } else if (animals[i][j] == 'h' && animals[i - 1][j] == '1') {
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");
+                } else if (animals[i][j] == '8' && animals[i - 1][j] == 'a') {
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");//elephant can't eat mouse;
+                } else if ((animals[i][j] != '1' || animals[i - 1][j] != 'h') && (animals[i][j] != 'a' || animals[i - 1][j] != '8')) {
+                    if (currentPosition >= 1 && currentPosition <= 8) {
+                        if (nextStep >= 49 && nextStep <= 56) {
+                            if (tiles.charAt(9 * (i - 1) + j) != '4') {
+                                if (currentPosition < nextStep - 48) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i - 1][j] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                }
+                            } else {
+                                animals[i - 1][j] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                            }
+                        } else if (nextStep >= 1 && nextStep <= 8) {
+                            System.out.println("不可以攻击自己人哦~");
+                        }
+                    } else if (currentPosition >= 49 && currentPosition <= 56) {
+                        if (nextStep >= 1 && nextStep <= 8) {
+                            if (tiles.charAt(9 * (i - 1) + j) != '2') {
+                                if (currentPosition - 48 < nextStep) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i - 1][j] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                }
+                            } else {
+                                animals[i - 1][j] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                            }
+                        } else if (nextStep >= 49 && nextStep <= 56) {
+                            System.out.println("不可以攻击自己人哦~");
+                        }
+                    }
+                }
+            }
+        } else if (order.charAt(1) == 's'/*going down*/) {
+            if (i >= 0 && i <= 5 && j >= 0 && j <= 8) {
+                int nextStep = animals[i + 1][j] - '0';
+                if (animals[i][j] == '1' && animals[i + 1][j] == 'h') {
+                    animals[i + 1][j] = animals[i][j];
+                    animals[i][j] = '0';
+                    turn = !turn;
+                } else if (animals[i][j] == 'a' && animals[i + 1][j] == '8') {
+                    animals[i + 1][j] = animals[i][j];
+                    turn = !turn;
+                }//monkey can eat elephant;
+                else if (animals[i][j] == 'h' && animals[i + 1][j] == '1') {
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");
+                } else if (animals[i][j] == '8' && animals[i + 1][j] == 'a') {
+                    System.out.println("您不可以攻击鼠哟~但它可以吃你哦~快跑！");//elephant can't eat mouse;
+                } else if ((animals[i][j] != '1' || animals[i + 1][j] != 'h') && (animals[i][j] != 'a' || animals[i + 1][j] != '8')) {
+                    if (currentPosition >= 1 && currentPosition <= 8) {
+                        if (nextStep >= 49 && nextStep <= 56) {
+                            if (tiles.charAt(9 * (i + 1) + j) != '4') {
+                                if (currentPosition < nextStep - 48) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i + 1][j] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                }
+                            } else {
+                                animals[i + 1][j] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                            }
+                        } else if (nextStep >= 1 && nextStep <= 8) {
+                            System.out.println("不可以攻击自己人哦~");
+                        }
+                    } else if (currentPosition >= 49 && currentPosition <= 56) {
+                        if (nextStep >= 1 && nextStep <= 8) {
+                            if (tiles.charAt(9 * (i + 1) + j) != '2') {
+                                if (currentPosition - 48 < nextStep) {
+                                    System.out.println("看清楚啦，它比你大呀，快跑，不能过去送死哦~");
+                                } else {
+                                    animals[i + 1][j] = animals[i][j];
+                                    animals[i][j] = '0';
+                                    turn = !turn;
+                                }
+                            } else {
+                                animals[i + 1][j] = animals[i][j];
+                                animals[i][j] = '0';
+                                turn = !turn;
+                            }
+                        } else if (nextStep >= 49 && nextStep <= 56) {
+                            System.out.println("不可以攻击自己人哦~");
+                        }
+                    }
+                }//except for mouse and elephant;
+            }
+        }
+    }
+    //除了老鼠和大象，大吃小，同等级互吃，不可吃同胞；
+
+    public static void victoryOrDefeat() {
+        int leftcount = 0, rightcount = 0;
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 9; j++) {
+                //扫描棋盘；
+                if (animals[i][j] - '0' >= 49 && animals[i][j] - '0' <= 56) {
+                    //leftcount表示棋盘中左方动物的个数；
+                    leftcount++;
+                } else if (animals[i][j] - '0' >= 1 && animals[i][j] - '0' <= 8) {
+                    //rightcount表示棋盘中右方动物的个数；
+                    rightcount++;
+                }
+            }
+        }
+        if (leftcount == 0) {
+            //左方动物已经全部被消灭；
+            System.out.println("右方胜利^0^，游戏结束，请选择退出游戏（exit）或重新开始游戏（restart）");
+        } else if (rightcount == 0) {
+            //右方动物已经全部被消灭；
+            System.out.println("左方胜利^0^，游戏结束，请选择退出游戏（exit）或重新开始游戏（restart）");
+        }
+    }
+    //一方动物被吃完；一方动物被困住；另一方胜；
+
+}
